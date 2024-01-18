@@ -1,3 +1,4 @@
+import axios from 'axios';
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 import SimpleLightbox from 'simplelightbox';
@@ -63,18 +64,16 @@ form.addEventListener('submit', event => {
     safesearch: 'true',
   });
 
-  fetch(`${BASE_URL}?${searchParams}`)
+  axios
+    .get(`${BASE_URL}?${searchParams}`)
     .then(response => {
       loaderToggle(loader);
       gallery.innerHTML = '';
       input.value = '';
-      if (!response.ok) {
-        throw new Error(response.status);
-      }
-      return response.json();
-    })
-    .then(fetchData => {
-      if (fetchData.hits.length === 0) {
+      const hits = response.data.hits;
+      console.log(hits);
+
+      if (hits.length === 0) {
         iziToast.error({
           message:
             'Sorry, there are no images matching your search query. Please try again!',
@@ -83,14 +82,12 @@ form.addEventListener('submit', event => {
         });
         return;
       }
-      const imageHTML = fetchData.hits.reduce((html, image) => {
+
+      const imageHTML = hits.reduce((html, image) => {
         return html + renderImages(image);
       }, '');
-
       gallery.innerHTML = imageHTML;
       lightbox.refresh();
     })
-    .catch(error => {
-      showAlert(error.toString());
-    });
+    .catch(error => console.log(error));
 });
