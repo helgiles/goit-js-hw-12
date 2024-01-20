@@ -10,6 +10,7 @@ const form = document.querySelector('.search-form');
 const input = document.querySelector('[type="text"]');
 const loader = document.querySelector('.loader');
 const gallery = document.querySelector('.gallery');
+const loadMoreBtn = document.querySelector('.load-more-button');
 
 var lightbox = new SimpleLightbox('.gallery a', {
   captionsData: 'alt',
@@ -17,45 +18,15 @@ var lightbox = new SimpleLightbox('.gallery a', {
   captionDelay: 250,
 });
 
-const loaderToggle = loader => {
+let page = 1;
+let per_page = 40;
+
+function loaderToggle(loader) {
   loader.classList.toggle('loader-is-active');
-};
+}
 
-const renderImages = images => {
-  return `<li class='gallery-item'>
-  <a class='gallery-link' href='${images.largeImageURL}'>
-    <img
-      class='gallery-image'
-      src='${images.webformatURL}'
-      alt='${images.tags}'
-    />
-  </a>
-  <div class="image-info">
-        <div class="info-item">
-          <span class="info-name">Likes</span>
-          <span class="info-value">${images.likes}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-name">Views</span>
-          <span class="info-value">${images.views}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-name">Comments</span>
-          <span class="info-value">${images.comments}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-name">Downloads</span>
-          <span class="info-value">${images.downloads}</span>
-        </div>
-      </div>
-</li>`;
-};
-
-form.addEventListener('submit', event => {
-  event.preventDefault();
+async function getImages() {
   const query = input.value.trim();
-  loaderToggle(loader);
-
   const searchParams = new URLSearchParams({
     key: '41579263-ea77ea2d4a90e42f3f0b59371',
     q: query,
@@ -64,14 +35,13 @@ form.addEventListener('submit', event => {
     safesearch: 'true',
   });
 
-  axios
+  await axios
     .get(`${BASE_URL}?${searchParams}`)
     .then(response => {
       loaderToggle(loader);
       gallery.innerHTML = '';
       input.value = '';
       const hits = response.data.hits;
-      console.log(hits);
 
       if (hits.length === 0) {
         iziToast.error({
@@ -83,11 +53,56 @@ form.addEventListener('submit', event => {
         return;
       }
 
-      const imageHTML = hits.reduce((html, image) => {
-        return html + renderImages(image);
-      }, '');
-      gallery.innerHTML = imageHTML;
+      renderImages(hits);
       lightbox.refresh();
+      page = 1;
     })
     .catch(error => console.log(error));
+}
+
+function renderImages(image) {
+  return (gallery.innerHTML = image.reduce(
+    (html, images) =>
+      html +
+      `<li class='gallery-item'>
+    <a class='gallery-link' href='${images.largeImageURL}'>
+      <img
+        class='gallery-image'
+        src='${images.webformatURL}'
+        alt='${images.tags}'
+      />
+    </a>
+    <div class="image-info">
+          <div class="info-item">
+            <span class="info-name">Likes</span>
+            <span class="info-value">${images.likes}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-name">Views</span>
+            <span class="info-value">${images.views}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-name">Comments</span>
+            <span class="info-value">${images.comments}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-name">Downloads</span>
+            <span class="info-value">${images.downloads}</span>
+          </div>
+        </div>
+  </li>`,
+    ''
+  ));
+}
+
+form.addEventListener('submit', event => {
+  event.preventDefault();
+  loaderToggle(loader);
+  getImages();
 });
+
+// loadMoreBtn.addEventListener('submit', event => {
+//   event.preventDefault();
+//   loaderToggle(loader);
+//   getImages();
+// });
