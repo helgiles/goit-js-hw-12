@@ -15,6 +15,18 @@ var lightbox = new SimpleLightbox('.gallery a', {
   captionDelay: 250,
 });
 
+function smoothScrolling() {
+  const imageHeight = document
+    .querySelector('.gallery li')
+    .getBoundingClientRect().height;
+
+  window.scrollBy({
+    top: imageHeight * 2,
+    left: 0,
+    behavior: 'smooth',
+  });
+}
+
 const api = axios.create({
   baseURL: 'https://pixabay.com/api/',
   params: {
@@ -64,7 +76,7 @@ const getImagesRequest = q => {
         return;
       }
 
-      if (hits.length !== 0) {
+      if (hits.length != 0) {
         loadMoreButton.classList.remove('is-hidden');
       }
 
@@ -115,6 +127,7 @@ function renderImages(images = []) {
   );
   gallery.insertAdjacentHTML('beforeend', markup);
   lightbox.refresh();
+  smoothScrolling();
 }
 
 let fetch = null;
