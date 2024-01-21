@@ -24,5 +24,5 @@ import{S as g,a as h,i as c}from"./assets/vendor-bad0427b.js";(function(){const 
             <span class="info-value">${p}</span>
           </div>
         </div>
-  </li>`,"");d.insertAdjacentHTML("beforeend",s),v.refresh(),b()}let i=null;y.addEventListener("submit",async o=>{o.preventDefault(),i!=null&&l.removeEventListener("click",i);const a=new FormData(o.currentTarget).get("input");d.innerHTML="";const n=S(a);i=async()=>{u.classList.remove("is-hidden");const e=await n();u.classList.add("is-hidden"),q(e)},await i(),l.addEventListener("click",i)});
+  </li>`,"");d.insertAdjacentHTML("beforeend",s),v.refresh()}let i=null;y.addEventListener("submit",async o=>{o.preventDefault(),i!=null&&l.removeEventListener("click",i);const a=new FormData(o.currentTarget).get("input");d.innerHTML="";const n=S(a);i=async()=>{u.classList.remove("is-hidden");const e=await n();u.classList.add("is-hidden"),q(e),b()},await i(),l.addEventListener("click",i)});
 //# sourceMappingURL=commonHelpers.js.map
