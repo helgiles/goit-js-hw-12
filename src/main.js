@@ -127,7 +127,6 @@ function renderImages(images = []) {
   );
   gallery.insertAdjacentHTML('beforeend', markup);
   lightbox.refresh();
-  smoothScrolling();
 }
 
 let fetch = null;
@@ -149,6 +148,7 @@ form.addEventListener('submit', async event => {
     const images = await fetchImages();
     loader.classList.add('is-hidden');
     renderImages(images);
+    smoothScrolling();
   };
   await fetch();
 
