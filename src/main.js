@@ -15,18 +15,6 @@ var lightbox = new SimpleLightbox('.gallery a', {
   captionDelay: 250,
 });
 
-function smoothScrolling() {
-  const imageHeight = document
-    .querySelector('.gallery li')
-    .getBoundingClientRect().height;
-
-  window.scrollBy({
-    top: imageHeight * 2,
-    left: 0,
-    behavior: 'smooth',
-  });
-}
-
 const api = axios.create({
   baseURL: 'https://pixabay.com/api/',
   params: {
@@ -127,6 +115,18 @@ function renderImages(images = []) {
   );
   gallery.insertAdjacentHTML('beforeend', markup);
   lightbox.refresh();
+}
+
+function smoothScrolling() {
+  const imageHeight = document
+    .querySelector('.gallery li')
+    .getBoundingClientRect().height;
+
+  window.scrollBy({
+    top: imageHeight * 2.5,
+    left: 0,
+    behavior: 'smooth',
+  });
 }
 
 let fetch = null;
