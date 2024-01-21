@@ -45,7 +45,7 @@ const getImagesRequest = q => {
         iziToast.info({
           message: "We're sorry, but you've reached the end of search results.",
           position: 'topRight',
-          backgroundColor: '#EF4040',
+          backgroundColor: '#fbbf0e',
         });
         return [];
       }
@@ -59,9 +59,13 @@ const getImagesRequest = q => {
           message:
             'Sorry, there are no images matching your search query. Please try again!',
           position: 'topRight',
-          backgroundColor: '#EF4040',
+          backgroundColor: '#ef4040',
         });
         return;
+      }
+
+      if (hits.length !== 0) {
+        loadMoreButton.classList.remove('is-hidden');
       }
 
       page++;
@@ -128,7 +132,9 @@ form.addEventListener('submit', async event => {
   const fetchImages = getImagesRequest(query);
 
   fetch = async () => {
+    loader.classList.remove('is-hidden');
     const images = await fetchImages();
+    loader.classList.add('is-hidden');
     renderImages(images);
   };
   await fetch();
