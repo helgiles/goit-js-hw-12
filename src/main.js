@@ -4,13 +4,10 @@ import 'izitoast/dist/css/iziToast.min.css';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
 
-const BASE_URL = 'https://pixabay.com/api/';
-
 const form = document.querySelector('.search-form');
-const input = document.querySelector('[type="text"]');
 const loader = document.querySelector('.loader');
 const gallery = document.querySelector('.gallery');
-const loadMoreBtn = document.querySelector('.load-more-button');
+const loadMoreButton = document.querySelector('.load-more-button');
 
 var lightbox = new SimpleLightbox('.gallery a', {
   captionsData: 'alt',
@@ -18,30 +15,44 @@ var lightbox = new SimpleLightbox('.gallery a', {
   captionDelay: 250,
 });
 
-let page = 1;
-let per_page = 40;
-
-function loaderToggle(loader) {
-  loader.classList.toggle('loader-is-active');
-}
-
-async function getImages() {
-  const query = input.value.trim();
-  const searchParams = new URLSearchParams({
+const api = axios.create({
+  baseURL: 'https://pixabay.com/api/',
+  params: {
     key: '41579263-ea77ea2d4a90e42f3f0b59371',
-    q: query,
     image_type: 'photo',
     orientation: 'horizontal',
     safesearch: 'true',
-  });
+  },
+});
 
-  await axios
-    .get(`${BASE_URL}?${searchParams}`)
-    .then(response => {
-      loaderToggle(loader);
-      gallery.innerHTML = '';
-      input.value = '';
-      const hits = response.data.hits;
+const getImages = async params => {
+  try {
+    const response = await api.get('', { params });
+    return response.data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const getImagesRequest = q => {
+  let page = 1;
+  let lastPage = false;
+  const per_page = 40;
+
+  return async () => {
+    try {
+      if (lastPage) {
+        iziToast.info({
+          message: "We're sorry, but you've reached the end of search results.",
+          position: 'topRight',
+          backgroundColor: '#EF4040',
+        });
+        return [];
+      }
+      const { hits, totalHits } = await getImages({ page, per_page, q });
+      if (page >= Math.ceil(totalHits / per_page)) {
+        lastPage = true;
+      }
 
       if (hits.length === 0) {
         iziToast.error({
@@ -53,56 +64,74 @@ async function getImages() {
         return;
       }
 
-      renderImages(hits);
-      lightbox.refresh();
-      page = 1;
-    })
-    .catch(error => console.log(error));
-}
+      page++;
 
-function renderImages(image) {
-  return (gallery.innerHTML = image.reduce(
-    (html, images) =>
+      return hits;
+    } catch (error) {
+      console.error(error);
+    }
+  };
+};
+
+function renderImages(images = []) {
+  const markup = images.reduce(
+    (
+      html,
+      { largeImageURL, webformatURL, tags, likes, views, comments, downloads }
+    ) =>
       html +
       `<li class='gallery-item'>
-    <a class='gallery-link' href='${images.largeImageURL}'>
+    <a class='gallery-link' href='${largeImageURL}'>
       <img
         class='gallery-image'
-        src='${images.webformatURL}'
-        alt='${images.tags}'
+        src='${webformatURL}'
+        alt='${tags}'
       />
     </a>
     <div class="image-info">
           <div class="info-item">
             <span class="info-name">Likes</span>
-            <span class="info-value">${images.likes}</span>
+            <span class="info-value">${likes}</span>
           </div>
           <div class="info-item">
             <span class="info-name">Views</span>
-            <span class="info-value">${images.views}</span>
+            <span class="info-value">${views}</span>
           </div>
           <div class="info-item">
             <span class="info-name">Comments</span>
-            <span class="info-value">${images.comments}</span>
+            <span class="info-value">${comments}</span>
           </div>
           <div class="info-item">
             <span class="info-name">Downloads</span>
-            <span class="info-value">${images.downloads}</span>
+            <span class="info-value">${downloads}</span>
           </div>
         </div>
   </li>`,
     ''
-  ));
+  );
+  gallery.insertAdjacentHTML('beforeend', markup);
+  lightbox.refresh();
 }
 
-form.addEventListener('submit', event => {
-  event.preventDefault();
-  loaderToggle(loader);
-  getImages();
-});
+let fetch = null;
 
-// loadMoreBtn.addEventListener('submit', event => {
-//   event.preventDefault();
-//   loaderToggle(loader);
-//   getImages();
-// });
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+
+  if (fetch != null) {
+    loadMoreButton.removeEventListener('click', fetch);
+  }
+
+  const input = new FormData(event.currentTarget);
+  const query = input.get('input');
+  gallery.innerHTML = '';
+  const fetchImages = getImagesRequest(query);
+
+  fetch = async () => {
+    const images = await fetchImages();
+    renderImages(images);
+  };
+  await fetch();
+
+  loadMoreButton.addEventListener('click', fetch);
+});
